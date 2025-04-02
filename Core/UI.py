@@ -24,6 +24,7 @@ class WindowsAutoDNS(ctk.CTk):
         self.selected_item = tk.IntVar(value=-1)  # No item selected by default
         self.temp_selected_item = -1  # Temporary selected item
         self.confirmed_item = -1  # Confirmed selected item
+        self.edit_mode = False  # Track edit mode
 
         self.current_page = "home"  # Nav Bar Default Page
         self.nav_buttons = {}  # Nav Buttons
@@ -38,18 +39,17 @@ class WindowsAutoDNS(ctk.CTk):
         self.navbar_frame = ctk.CTkFrame(self, width=200, height=500, corner_radius=0, fg_color="#2D2D2D")
         self.navbar_frame.pack(side="left", fill="y")
         self.logo_label = ctk.CTkLabel(
-            # Icon App
             self.navbar_frame, text="DNS App",
             font=("Arial", 24, "bold"), text_color="#FFFFFF"
         )
         self.logo_label.pack(pady=30, padx=10)
-        nav_buttons_info = [  # NavBar Icons
-            ("\ue88a Home", "home", self.show_home),  # Home
-            ("\uf833 Settings", "settings", self.show_settings),  # Settings
-            ("\ue88e Info", "about", self.show_about)  # Info
+        nav_buttons_info = [
+            ("\ue88a Home", "home", self.show_home),
+            ("\uf833 Settings", "settings", self.show_settings),
+            ("\ue88e Info", "about", self.show_about)
         ]
         for text, page, command in nav_buttons_info:
-            button = ctk.CTkButton(  # Pages
+            button = ctk.CTkButton(
                 self.navbar_frame, text=text, command=lambda p=page, c=command: self.change_page(p, c),
                 font=("Material Icons", 16), fg_color="transparent",
                 hover_color="#404040", anchor="w",
@@ -58,9 +58,9 @@ class WindowsAutoDNS(ctk.CTk):
                 compound="left"
             )
             button.pack(fill="x", pady=5, padx=10)
-            self.nav_buttons[page] = button  # NavBar Hover
+            self.nav_buttons[page] = button
 
-        self.update_navbar_buttons()  # Key Color
+        self.update_navbar_buttons()
 
     def change_page(self, page, command):
         self.current_page = page
@@ -70,17 +70,14 @@ class WindowsAutoDNS(ctk.CTk):
     def update_navbar_buttons(self):
         for page, button in self.nav_buttons.items():
             if page == self.current_page:
-                button.configure(fg_color="#404040", text_color="#EE00B6")  # NavBar Active Key
+                button.configure(fg_color="#404040", text_color="#EE00B6")
             else:
-                button.configure(fg_color="transparent", text_color="#FFFFFF")  # NavBar Disable Key
-
-    ################### HomePage ##########################
+                button.configure(fg_color="transparent", text_color="#FFFFFF")
 
     def create_home_page(self):
         self.home_frame = ctk.CTkFrame(self, corner_radius=0, fg_color="#1E1E1E")
         self.home_frame.pack(side="right", fill="both", expand=True)
 
-        # Combobox TkOptionMenu
         self.option_menu = ctk.CTkOptionMenu(
             self.home_frame,
             values=["Option 1", "Option 2", "Option 3"],
@@ -96,7 +93,6 @@ class WindowsAutoDNS(ctk.CTk):
         )
         self.option_menu.pack(pady=20, padx=20, fill="x")
 
-        # Row For Action Keys
         button_container = ctk.CTkFrame(self.home_frame, fg_color="transparent")
         button_container.pack(side="right", padx=5, pady=10)
 
@@ -113,6 +109,19 @@ class WindowsAutoDNS(ctk.CTk):
         )
         add_btn.pack(side="top", pady=5)
 
+        edit_btn = ctk.CTkButton(
+            button_container,
+            text="✏️",
+            command=self.toggle_edit_mode,
+            fg_color=self.color,
+            hover_color="#404040",
+            font=("Arial", 20),
+            width=20,
+            height=20,
+            corner_radius=15
+        )
+        edit_btn.pack(side="top", pady=5)
+
         delete_btn = ctk.CTkButton(
             button_container,
             text="➖",
@@ -126,7 +135,6 @@ class WindowsAutoDNS(ctk.CTk):
         )
         delete_btn.pack(side="top", pady=5)
 
-        # Scroll Bar
         scroll_frame = ctk.CTkFrame(self.home_frame, corner_radius=50, fg_color="#3D2F3F")
         scroll_frame.pack(pady=10, padx=20, fill="both", expand=True)
 
@@ -141,7 +149,13 @@ class WindowsAutoDNS(ctk.CTk):
         self.scrollable_frame = ctk.CTkFrame(canvas, fg_color="#2D2D2D")
         self.scrollable_window = canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
 
-        # Label برای نمایش پیام
+        headers_frame = ctk.CTkFrame(self.scrollable_frame, fg_color="#2D2D2D")
+        headers_frame.pack(fill="x", padx=10, pady=(10, 5))
+
+        ctk.CTkLabel(headers_frame, text="DNS Name", font=("Arial", 14, "bold"), width=150).pack(side="left", padx=5)
+        ctk.CTkLabel(headers_frame, text="IPv4", font=("Arial", 14, "bold"), width=100).pack(side="left", padx=5)
+        ctk.CTkLabel(headers_frame, text="IPv6", font=("Arial", 14, "bold"), width=100).pack(side="left", padx=5)
+
         self.message_label = ctk.CTkLabel(
             self.home_frame,
             text="",
@@ -151,7 +165,6 @@ class WindowsAutoDNS(ctk.CTk):
         )
         self.message_label.pack(side="bottom", pady=10, fill="x")
 
-        # Radio Box Items
         for _ in range(3):
             self.add_item()
 
@@ -167,7 +180,6 @@ class WindowsAutoDNS(ctk.CTk):
         canvas.bind_all("<Button-4>", lambda e: canvas.yview_scroll(-1, "units"))
         canvas.bind_all("<Button-5>", lambda e: canvas.yview_scroll(1, "units"))
 
-    # radio_btn Frame
     def add_item(self):
         new_value = self.item_counter
         item_frame = ctk.CTkFrame(
@@ -178,62 +190,124 @@ class WindowsAutoDNS(ctk.CTk):
             corner_radius=10
         )
         item_frame.pack(fill="x", pady=5, padx=10)
+        
         radio_btn = ctk.CTkRadioButton(
             item_frame,
-            text=f"Item {new_value}",
+            text="",
             variable=self.selected_item,
             value=new_value,
-            fg_color="#1E1E1E",  # رنگ دایره پیش‌فرض
-            hover_color="#1E1E1E",  # غیرفعال کردن هاور
+            fg_color="#3A3939",
+            hover_color="#1E1E1E",
             text_color="white",
             border_color="#1E1E1E",
             font=("Arial", 14),
-            command=lambda: self.change_item_background(new_value)
+            command=lambda: self.change_item_background(new_value),
+            width=20
         )
-        radio_btn.pack(side="left", padx=10, pady=5)
-        # Selector
-        self.radio_buttons_dict[new_value] = (item_frame, radio_btn)
+        radio_btn.pack(side="left", padx=(10, 5), pady=5)
+        
+        # DNS Name Entry
+        dns_entry = ctk.CTkEntry(
+            item_frame,
+            placeholder_text=f"DNS {new_value}",
+            width=150,
+            fg_color="#1E1E1E",
+            text_color="white",
+            border_color="#1E1E1E",
+            state="disabled",
+            placeholder_text_color="white"
+        )
+        dns_entry.pack(side="left", padx=5, pady=5)
+        
+        # IPv4 Entry
+        ipv4_entry = ctk.CTkEntry(
+            item_frame,
+            placeholder_text="0.0.0.0",
+            width=100,
+            fg_color="#1E1E1E",
+            text_color="white",
+            border_color="#1E1E1E",
+            state="disabled",
+            placeholder_text_color="white"
+        )
+        ipv4_entry.pack(side="left", padx=5, pady=5)
+        
+        # IPv6 Entry
+        ipv6_entry = ctk.CTkEntry(
+            item_frame,
+            placeholder_text="::1",
+            width=100,
+            fg_color="#1E1E1E",
+            text_color="white",
+            border_color="#1E1E1E",
+            state="disabled",
+            placeholder_text_color="white"
+        )
+        ipv6_entry.pack(side="left", padx=5, pady=5)
+        
+        self.radio_buttons_dict[new_value] = {
+            "frame": item_frame,
+            "radio": radio_btn,
+            "dns_entry": dns_entry,
+            "ipv4_entry": ipv4_entry,
+            "ipv6_entry": ipv6_entry
+        }
         self.item_counter += 1
 
+    def toggle_edit_mode(self):
+        self.edit_mode = not self.edit_mode
+        new_state = "normal" if self.edit_mode else "disabled"
+        new_bg = "#2D2D2D" if self.edit_mode else "#1E1E1E"
+        new_border = self.color if self.edit_mode else "#1E1E1E"
+        
+        for item_data in self.radio_buttons_dict.values():
+            item_data["dns_entry"].configure(state=new_state, fg_color=new_bg ,border_color=new_border)
+            item_data["ipv4_entry"].configure(state=new_state, fg_color=new_bg,border_color=new_border)
+            item_data["ipv6_entry"].configure(state=new_state, fg_color=new_bg,border_color=new_border)
+        
+        self.message_label.configure(
+            text="Edit Mode: ON" if self.edit_mode else "Edit Mode: OFF",
+            text_color="#00FF00" if self.edit_mode else "#FF0000"
+        )
+    # Radio change Selected item
     def change_item_background(self, selected_value):
-        # تغییر پس‌زمینه آیتم‌ها
-        for value, (item_frame, _) in self.radio_buttons_dict.items():
-            item_frame.configure(fg_color="#1E1E1E")
+        for value, item_data in self.radio_buttons_dict.items():
+            item_data["frame"].configure(fg_color="#1E1E1E")
         if selected_value in self.radio_buttons_dict:
-            item_frame, _ = self.radio_buttons_dict[selected_value]
-            item_frame.configure(fg_color=self.color)
-
-        # ذخیره‌سازی آیتم موقت
+            self.radio_buttons_dict[selected_value]["ipv6_entry"].configure(fg_color=self.color ,border_color=self.color)
+            self.radio_buttons_dict[selected_value]["ipv4_entry"].configure(fg_color=self.color,border_color=self.color)
+            self.radio_buttons_dict[selected_value]["dns_entry"].configure(fg_color=self.color,border_color=self.color)
+            self.radio_buttons_dict[selected_value]["frame"].configure(fg_color=self.color,border_color=self.color)
         self.temp_selected_item = selected_value
 
     def confirm_selection(self, event=None):
-        """Confirm the selection when Enter is pressed."""
         if self.temp_selected_item != -1:
-            # بازنشانی رنگ دایره برای آیتم قبلی
             if self.confirmed_item != -1 and self.confirmed_item in self.radio_buttons_dict:
-                _, last_radio_btn = self.radio_buttons_dict[self.confirmed_item]
-                last_radio_btn.configure(fg_color="#1E1E1E")
+                self.radio_buttons_dict[self.confirmed_item]["radio"].configure(fg_color="#1E1E1E")
 
-            # تغییر رنگ دایره به سبز برای آیتم انتخاب‌شده
             if self.temp_selected_item in self.radio_buttons_dict:
-                _, radio_btn = self.radio_buttons_dict[self.temp_selected_item]
-                radio_btn.configure(fg_color="#00FF00")  # سبز
-
-            # ذخیره‌سازی آیتم انتخاب‌شده نهایی
+                self.radio_buttons_dict[self.temp_selected_item]["radio"].configure(fg_color="#00FF00")
             self.confirmed_item = self.temp_selected_item
-
             self.selected_item.set(self.temp_selected_item)
-            self.message_label.configure(text=f"Item {self.temp_selected_item} selected")
+            
+            item_data = self.radio_buttons_dict[self.temp_selected_item]
+            dns = item_data["dns_entry"].get() or item_data["dns_entry"].cget("placeholder_text")
+            ipv4 = item_data["ipv4_entry"].get() or item_data["ipv4_entry"].cget("placeholder_text")
+            ipv6 = item_data["ipv6_entry"].get() or item_data["ipv6_entry"].cget("placeholder_text")
+            self.message_label.configure(
+                text=f"Selected: DNS={dns}, IPv4={ipv4}, IPv6={ipv6}",
+                text_color="white"
+            )
         else:
-            self.message_label.configure(text="No item selected!")
+            self.message_label.configure(text="No item selected!", text_color="white")
 
     def delete_item(self):
         selected_value = self.selected_item.get()
         if selected_value != -1 and selected_value in self.radio_buttons_dict:
-            item_frame, radio_btn = self.radio_buttons_dict[selected_value]
-            item_frame.destroy()
+            self.radio_buttons_dict[selected_value]["frame"].destroy()
             del self.radio_buttons_dict[selected_value]
             self.selected_item.set(-1)
+            self.message_label.configure(text="Item deleted", text_color="white")
 
     def show_home(self):
         self.home_frame.pack(side="right", fill="both", expand=True)
